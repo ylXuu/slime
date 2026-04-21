@@ -156,12 +156,9 @@ def correct_format(s: str) -> bool:
     """Check if a single turn has correct tag balance."""
     return all(
         [
-            s.count("<search>") == s.count("</search>"),
-            s.count("<access>") == s.count("</access>"),
+            s.count("<tool_call>") == s.count("</tool_call>"),
             s.count("<answer>") == s.count("</answer>"),
-            s.count("<search>") + s.count("<access>") + s.count("<answer>") <= 1,
-            s.count("Assistant") == s.count("assistant") == 0,
-            s.count("</think>") <= 1,
+            s.count("<tool_call>") + s.count("<answer>") <= 1,
         ]
     )
 
@@ -225,7 +222,8 @@ async def reward_func(args, sample, **kwargs) -> float:
     # Invalid question penalty
     # If the agent claims a valid question is invalid, penalize
     if answer is not None:
-        invalid_keywords = ["question is invalid", "invalid", "appropriate", "valid"]
+        # invalid_keywords = ["question is invalid", "invalid", "appropriate", "valid"]
+        invalid_keywords = ["question is invalid", "invalid"]
         lower_answer = answer.lower()
         if any(kw in lower_answer for kw in invalid_keywords):
             # Check if the ground truth suggests this is a real question
