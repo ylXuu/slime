@@ -87,7 +87,8 @@ ROLLOUT_ARGS=(
 EVAL_ARGS=(
    --eval-interval 20
    # --eval-prompt-data 2wiki /cpfs01/yilong.xu/datasets/ASearcher-slime/test/2WikiMultihopQA_rand1000.jsonl musique /cpfs01/yilong.xu/datasets/ASearcher-slime/test/Musique_rand1000.jsonl frames /cpfs01/yilong.xu/datasets/ASearcher-slime/test/frames.jsonl bamboogle /cpfs01/yilong.xu/datasets/ASearcher-slime/test/Bamboogle.jsonl nq /cpfs01/yilong.xu/datasets/ASearcher-slime/test/NQ_rand1000.jsonl popqa /cpfs01/yilong.xu/datasets/ASearcher-slime/test/PopQA_rand1000.jsonl hotpotqa /cpfs01/yilong.xu/datasets/ASearcher-slime/test/HotpotQA_rand1000.jsonl triviaqa /cpfs01/yilong.xu/datasets/ASearcher-slime/test/TriviaQA_rand1000.jsonl
-   --eval-prompt-data 2wiki /cpfs01/yilong.xu/datasets/ASearcher-slime/test/2WikiMultihopQA_rand1000.jsonl musique /cpfs01/yilong.xu/datasets/ASearcher-slime/test/Musique_rand1000.jsonl nq /cpfs01/yilong.xu/datasets/ASearcher-slime/test/NQ_rand1000.jsonl hotpotqa /cpfs01/yilong.xu/datasets/ASearcher-slime/test/HotpotQA_rand1000.jsonl
+   # --eval-prompt-data 2wiki /cpfs01/yilong.xu/datasets/ASearcher-slime/test/2WikiMultihopQA_rand1000.jsonl musique /cpfs01/yilong.xu/datasets/ASearcher-slime/test/Musique_rand1000.jsonl nq /cpfs01/yilong.xu/datasets/ASearcher-slime/test/NQ_rand1000.jsonl hotpotqa /cpfs01/yilong.xu/datasets/ASearcher-slime/test/HotpotQA_rand1000.jsonl
+   --eval-prompt-data hotpotqa /cpfs01/yilong.xu/datasets/ASearcher-slime/test/HotpotQA_rand1000.jsonl
    --eval-input-key prompt
    --eval-label-key label
    --n-samples-per-eval-prompt 1

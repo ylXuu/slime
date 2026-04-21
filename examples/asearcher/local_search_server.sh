@@ -6,5 +6,5 @@ python local_search_server.py \
     --retriever_name e5 \
     --retriever_model /cpfs01/yilong.xu/models/e5-base-v2 \
     --topk 5 \
-    --port 8000
-    # --faiss_gpu
+    --port 8000 \
+    --faiss_gpu

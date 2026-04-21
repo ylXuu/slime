@@ -37,7 +37,7 @@ async def local_search(
     search_url: str,
     query: str,
     top_k: int = 5,
-    timeout: int = 60,
+    timeout: int = 120,
     proxy: str | None = None,
 ) -> list[dict]:
     """
@@ -90,7 +90,7 @@ async def local_search(
 async def local_visit(
     access_url: str,
     url: str,
-    timeout: int = 60,
+    timeout: int = 120,
     proxy: str | None = None,
 ) -> str:
     """
