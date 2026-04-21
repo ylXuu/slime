@@ -161,7 +161,10 @@ class BM25Retriever(BaseRetriever):
         self.searcher = LuceneSearcher(self.index_path)
         self.contain_doc = self._check_contain_doc()
         if not self.contain_doc:
-            self.corpus = load_corpus(self.corpus_path)
+            corpus = load_corpus(self.corpus_path)
+            print("Pre-loading corpus into memory ...")
+            self.corpus_list = [corpus[i] for i in range(len(corpus))]
+            del corpus
         self.max_process_num = 8
 
     def _check_contain_doc(self):
@@ -190,7 +193,7 @@ class BM25Retriever(BaseRetriever):
                 for content in all_contents
             ]
         else:
-            results = load_docs(self.corpus, [hit.docid for hit in hits])
+            results = [self.corpus_list[int(hit.docid)] for hit in hits]
 
         return (results, scores) if return_score else results
 
@@ -214,7 +217,12 @@ class DenseRetriever(BaseRetriever):
             co.shard = True
             self.index = faiss.index_cpu_to_all_gpus(self.index, co=co)
 
-        self.corpus = load_corpus(self.corpus_path)
+        corpus = load_corpus(self.corpus_path)
+        # Pre-load into memory for fast random access under concurrent requests
+        print("Pre-loading corpus into memory ...")
+        self.corpus_list = [corpus[i] for i in range(len(corpus))]
+        del corpus
+
         self.encoder = Encoder(
             model_name=self.retrieval_method,
             model_path=config.retrieval_model_path,
@@ -232,7 +240,7 @@ class DenseRetriever(BaseRetriever):
         scores, idxs = self.index.search(query_emb, k=num)
         idxs = idxs[0]
         scores = scores[0]
-        results = load_docs(self.corpus, idxs)
+        results = [self.corpus_list[int(i)] for i in idxs]
         return (results, scores.tolist()) if return_score else results
 
     def _batch_search(self, query_list: list[str], num: int = None, return_score: bool = False):
@@ -251,7 +259,7 @@ class DenseRetriever(BaseRetriever):
             batch_idxs = batch_idxs.tolist()
 
             flat_idxs = sum(batch_idxs, [])
-            batch_results = load_docs(self.corpus, flat_idxs)
+            batch_results = [self.corpus_list[int(i)] for i in flat_idxs]
             batch_results = [batch_results[i * num : (i + 1) * num] for i in range(len(batch_idxs))]
 
             results.extend(batch_results)

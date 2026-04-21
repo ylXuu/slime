@@ -12,6 +12,26 @@ import aiohttp
 
 SEMAPHORE = asyncio.Semaphore(256)
 
+# Reuse ClientSession per event loop to avoid TCP connection churn under high concurrency
+_SESSIONS: dict[tuple[int, str | None], aiohttp.ClientSession] = {}
+
+
+def _get_session(proxy: str | None = None) -> aiohttp.ClientSession:
+    loop = asyncio.get_running_loop()
+    key = (id(loop), proxy)
+    if key not in _SESSIONS or _SESSIONS[key].closed:
+        kwargs = {
+            "connector": aiohttp.TCPConnector(
+                limit=500,
+                limit_per_host=200,
+                ttl_dns_cache=300,
+            )
+        }
+        if proxy:
+            kwargs["proxy"] = proxy
+        _SESSIONS[key] = aiohttp.ClientSession(**kwargs)
+    return _SESSIONS[key]
+
 
 async def local_search(
     search_url: str,
@@ -39,16 +59,13 @@ async def local_search(
         "return_scores": False,
     }
     timeout_obj = aiohttp.ClientTimeout(total=timeout)
-    session_kwargs = {}
-    if proxy:
-        session_kwargs["proxy"] = proxy
 
     try:
         async with SEMAPHORE:
-            async with aiohttp.ClientSession(**session_kwargs) as session:
-                async with session.post(search_url, json=payload, timeout=timeout_obj) as resp:
-                    resp.raise_for_status()
-                    result = await resp.json()
+            session = _get_session(proxy)
+            async with session.post(search_url, json=payload, timeout=timeout_obj) as resp:
+                resp.raise_for_status()
+                result = await resp.json()
     except Exception as e:
         print(f"Error calling local search at {search_url}: {e}")
         return []
@@ -89,16 +106,13 @@ async def local_visit(
     """
     payload = {"urls": [url]}
     timeout_obj = aiohttp.ClientTimeout(total=timeout)
-    session_kwargs = {}
-    if proxy:
-        session_kwargs["proxy"] = proxy
 
     try:
         async with SEMAPHORE:
-            async with aiohttp.ClientSession(**session_kwargs) as session:
-                async with session.post(access_url, json=payload, timeout=timeout_obj) as resp:
-                    resp.raise_for_status()
-                    result = await resp.json()
+            session = _get_session(proxy)
+            async with session.post(access_url, json=payload, timeout=timeout_obj) as resp:
+                resp.raise_for_status()
+                result = await resp.json()
     except Exception as e:
         print(f"Error calling local access at {access_url} for url={url}: {e}")
         return ""
