@@ -25,7 +25,7 @@ from slime.utils.types import Sample
 # ---------------------------------------------------------------------------
 
 SEARCH_CONFIG = {
-    "max_turns": 10,
+    "max_turns": 30,
     "topk": 5,
     "search_url": "http://127.0.0.1:8000/retrieve",
     "access_url": "http://127.0.0.1:8000/access",

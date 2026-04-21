@@ -82,7 +82,8 @@ async def local_search(
             contents = doc.get("contents", "")
             title = doc.get("title", "")
             text = doc.get("text", "")
-            contexts.append({"title": title, "text": text, "contents": contents})
+            url = doc.get("url", "")
+            contexts.append({"title": title, "text": text, "contents": contents, "url": url})
     return contexts
 
 
@@ -139,7 +140,9 @@ def format_search_results(results: list[dict]) -> str:
     for idx, doc in enumerate(results, start=1):
         title = doc.get("title", "No title")
         text = doc.get("text", "")
-        lines.append(f"[{idx}] Title: {title}\n{text}")
+        url = doc.get("url", "")
+        url_line = f"\nURL: {url}" if url else ""
+        lines.append(f"[{idx}] Title: {title}{url_line}\n{text}")
     return "\n\n".join(lines)
 
 

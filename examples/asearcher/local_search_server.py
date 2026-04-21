@@ -163,7 +163,7 @@ class BM25Retriever(BaseRetriever):
         if not self.contain_doc:
             corpus = load_corpus(self.corpus_path)
             print("Pre-loading corpus into memory ...")
-            self.corpus_list = [corpus[i] for i in range(len(corpus))]
+            self.corpus_list = [corpus[i] for i in tqdm(range(len(corpus)))]
             del corpus
         self.max_process_num = 8
 
@@ -183,14 +183,15 @@ class BM25Retriever(BaseRetriever):
             hits = hits[:num]
 
         if self.contain_doc:
-            all_contents = [json.loads(self.searcher.doc(hit.docid).raw())["contents"] for hit in hits]
+            all_raw = [json.loads(self.searcher.doc(hit.docid).raw()) for hit in hits]
             results = [
                 {
-                    "title": content.split("\n")[0].strip('"'),
-                    "text": "\n".join(content.split("\n")[1:]),
-                    "contents": content,
+                    "title": raw.get("contents", "").split("\n")[0].strip('"'),
+                    "text": "\n".join(raw.get("contents", "").split("\n")[1:]),
+                    "contents": raw.get("contents", ""),
+                    "url": raw.get("url", ""),
                 }
-                for content in all_contents
+                for raw in all_raw
             ]
         else:
             results = [self.corpus_list[int(hit.docid)] for hit in hits]
@@ -213,14 +214,15 @@ class DenseRetriever(BaseRetriever):
         self.index = faiss.read_index(self.index_path)
         if config.faiss_gpu:
             co = faiss.GpuMultipleClonerOptions()
-            co.useFloat16 = True
+            # co.useFloat16 = True
+            co.useFloat16 = False  # using FP16 can cause instability for some models (e.g. E5), so we disable by default
             co.shard = True
             self.index = faiss.index_cpu_to_all_gpus(self.index, co=co)
 
         corpus = load_corpus(self.corpus_path)
         # Pre-load into memory for fast random access under concurrent requests
         print("Pre-loading corpus into memory ...")
-        self.corpus_list = [corpus[i] for i in range(len(corpus))]
+        self.corpus_list = [corpus[i] for i in tqdm(range(len(corpus)))]
         del corpus
 
         self.encoder = Encoder(
