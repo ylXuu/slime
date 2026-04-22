@@ -7,4 +7,4 @@ python asearcher_local_search_server.py \
     --topk 5 \
     --port 8000 \
     --faiss_gpu \
-    --save_address_to none
+    --save-address-to none
