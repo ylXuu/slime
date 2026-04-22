@@ -110,7 +110,7 @@ class BaseSearchActor:
 # BM25 Search Actor (Ray)
 # ---------------------------------------------------------------------------
 
-@ray.remote(num_cpus=2, max_concurrency=20)
+@ray.remote(num_cpus=2, max_concurrency=64)
 class BM25SearchActor(BaseSearchActor):
     """Ray actor that wraps a BM25 (Pyserini Lucene) searcher."""
 
@@ -189,7 +189,7 @@ class BM25SearchActor(BaseSearchActor):
 # Dense Search Actor (Ray) — GPU encode + CPU FAISS
 # ---------------------------------------------------------------------------
 
-@ray.remote(num_gpus=1, num_cpus=2, max_concurrency=20)
+@ray.remote(num_gpus=1, num_cpus=2, max_concurrency=64)
 class DenseSearchActor(BaseSearchActor):
     """Ray actor that wraps a dense retriever (E5/BGE/DPR + FAISS CPU)."""
 
@@ -285,7 +285,7 @@ class DenseSearchActor(BaseSearchActor):
 # Page Access Actor (Ray)
 # ---------------------------------------------------------------------------
 
-@ray.remote(num_cpus=1, max_concurrency=50)
+@ray.remote(num_cpus=1, max_concurrency=256)
 class PageAccessActor:
     """Ray actor that serves page content by URL from a local dump."""
 

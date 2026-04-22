@@ -23,7 +23,7 @@ def _get_session(proxy: str | None = None) -> aiohttp.ClientSession:
         kwargs = {
             "connector": aiohttp.TCPConnector(
                 limit=500,
-                limit_per_host=200,
+                limit_per_host=256,
                 ttl_dns_cache=300,
             )
         }

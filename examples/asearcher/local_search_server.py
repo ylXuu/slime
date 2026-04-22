@@ -214,8 +214,7 @@ class DenseRetriever(BaseRetriever):
         self.index = faiss.read_index(self.index_path)
         if config.faiss_gpu:
             co = faiss.GpuMultipleClonerOptions()
-            # co.useFloat16 = True
-            co.useFloat16 = False  # using FP16 can cause instability for some models (e.g. E5), so we disable by default
+            co.useFloat16 = True
             co.shard = True
             self.index = faiss.index_cpu_to_all_gpus(self.index, co=co)
 

@@ -57,6 +57,8 @@ class ServerConfig:
         max_access_concurrent: int = 256,
         search_timeout: float = 60.0,
         access_timeout: float = 60.0,
+        search_batcher_size: int = 64,
+        search_batcher_wait_ms: float = 10.0,
     ):
         self.retrieval_method = retrieval_method
         self.retrieval_topk = retrieval_topk
@@ -74,6 +76,8 @@ class ServerConfig:
         self.max_access_concurrent = max_access_concurrent
         self.search_timeout = search_timeout
         self.access_timeout = access_timeout
+        self.search_batcher_size = search_batcher_size
+        self.search_batcher_wait_ms = search_batcher_wait_ms
 
 
 # ---------------------------------------------------------------------------
@@ -117,6 +121,8 @@ def create_lifespan(config: ServerConfig):
             use_fp16=config.retrieval_use_fp16,
             batch_size=config.retrieval_batch_size,
             faiss_gpu=config.faiss_gpu,
+            search_batcher_size=config.search_batcher_size,
+            search_batcher_wait_ms=config.search_batcher_wait_ms,
         )
 
         print("--- Local Search Server Node startup complete. ---")
@@ -214,6 +220,8 @@ if __name__ == "__main__":
     parser.add_argument("--max_access_concurrent", type=int, default=256, help="Max concurrent access requests.")
     parser.add_argument("--search_timeout", type=float, default=60.0, help="Search timeout in seconds.")
     parser.add_argument("--access_timeout", type=float, default=60.0, help="Access timeout in seconds.")
+    parser.add_argument("--search_batcher_size", type=int, default=64, help="Micro-batch size for single-query search aggregation.")
+    parser.add_argument("--search_batcher_wait_ms", type=float, default=10.0, help="Max wait time (ms) to form a micro-batch.")
     parser.add_argument("--port", type=int, default=8000, help="Server port.")
     parser.add_argument("--host", type=str, default="0.0.0.0", help="Server host.")
     parser.add_argument("--ray_address", type=str, default="auto", help="Ray cluster address ('auto' or 'local').")
@@ -255,8 +263,17 @@ if __name__ == "__main__":
         max_access_concurrent=args.max_access_concurrent,
         search_timeout=args.search_timeout,
         access_timeout=args.access_timeout,
+        search_batcher_size=args.search_batcher_size,
+        search_batcher_wait_ms=args.search_batcher_wait_ms,
     )
 
     app = create_app(config)
     print(f"[Server] Starting on {args.host}:{args.port}")
-    uvicorn.run(app, host=args.host, port=args.port)
+    uvicorn.run(
+        app,
+        host=args.host,
+        port=args.port,
+        loop="uvloop",
+        timeout_keep_alive=300,
+        backlog=2048,
+    )
