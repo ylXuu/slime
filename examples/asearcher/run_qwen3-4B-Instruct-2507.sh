@@ -149,7 +149,7 @@ WANDB_ARGS=(
 
 SGLANG_ARGS=(
    --rollout-num-gpus-per-engine 2
-   --sglang-mem-fraction-static 0.7 # 训推一体化的时候，megatron初始化会占一些显存，初始化完成后才会释放（offload）。因此需要调整 --sglang-mem-fraction-static 参数，降低 SGLang 的 GPU 显存占用比例，以避免 GPU 显存不足的问题。
+   --sglang-mem-fraction-static 0.5 # 训推一体化的时候，megatron初始化会占一些显存，初始化完成后才会释放（offload）。因此需要调整 --sglang-mem-fraction-static 参数，降低 SGLang 的 GPU 显存占用比例，以避免 GPU 显存不足的问题。
 )
 
 MISC_ARGS=(

@@ -11,10 +11,12 @@ Reference: examples/search-r1/generate_with_search.py
 
 import asyncio
 import json
+import os
 import re
 
 from prompts import build_system_prompt
-from search_clients import format_search_results, format_visit_result, local_search, local_visit
+# from search_clients import format_search_results, format_visit_result, local_search, local_visit
+from asearcher_search_clients import format_search_results, format_visit_result, local_search, local_visit
 
 from slime.rollout.sglang_rollout import GenerateState
 from slime.utils.http_utils import post
@@ -24,15 +26,37 @@ from slime.utils.types import Sample
 # Configuration
 # ---------------------------------------------------------------------------
 
+def _resolve_server_address():
+    """Read the latest .txt file under .server_address/ (relative to this file)."""
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+    addr_dir = os.path.join(script_dir, ".server_address")
+    if not os.path.isdir(addr_dir):
+        return None
+    txts = [
+        os.path.join(addr_dir, f)
+        for f in os.listdir(addr_dir)
+        if f.endswith(".txt")
+    ]
+    if not txts:
+        return None
+    latest = max(txts, key=os.path.getmtime)
+    with open(latest, "r") as f:
+        return f.read().strip()
+
+
 SEARCH_CONFIG = {
-    "max_turns": 30,
+    "max_turns": 15,
     "topk": 5,
-    # "search_url": "http://127.0.0.1:8000/retrieve",
-    # "access_url": "http://127.0.0.1:8000/access",
     "search_url": "http://109.22.128.169:8000/retrieve",
     "access_url": "http://109.22.128.169:8000/access",
     "return_logprob": True,
 }
+
+# Override with dynamically discovered server address if available.
+_server_addr = _resolve_server_address()
+if _server_addr:
+    SEARCH_CONFIG["search_url"] = f"http://{_server_addr}/retrieve"
+    SEARCH_CONFIG["access_url"] = f"http://{_server_addr}/access"
 
 
 # ---------------------------------------------------------------------------
