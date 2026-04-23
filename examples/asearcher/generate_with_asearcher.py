@@ -226,7 +226,7 @@ async def generate(args, sample: Sample, sampling_params) -> Sample:
     if SEARCH_CONFIG["return_logprob"]:
         sample.rollout_log_probs = rollout_log_probs if rollout_log_probs else None
 
-    sample.metadata = {"round_number": _turn_idx + 1}
+    sample.metadata = {"round_number": _turn_idx + 1} # TODO: might be unnecessary?
 
     match output["meta_info"]["finish_reason"]["type"]:
         case "length":

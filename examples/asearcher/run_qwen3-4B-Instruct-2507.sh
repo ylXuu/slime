@@ -74,7 +74,6 @@ ROLLOUT_ARGS=(
    --label-key label
    # TODO: Do NOT use --apply-chat-template; we construct the chat format inside generate().
    --rollout-shuffle
-   --log-multi-turn
    --num-rollout 1000
    --rollout-batch-size 32
    --n-samples-per-prompt 8
@@ -146,6 +145,7 @@ WANDB_ARGS=(
    --use-tensorboard
    --tb-project-name ./tensorboard_log
    --tb-experiment-name $exp_name
+   --log-multi-turn
 )
 
 SGLANG_ARGS=(
