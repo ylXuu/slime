@@ -201,7 +201,7 @@ async def generate(args, sample: Sample, sampling_params) -> Sample:
             break
 
         # Decide next step based on agent output
-        obs_text, done = await process_turn(response)
+        obs_text, done = await process_turn(cur_response)
         if done:
             break
 

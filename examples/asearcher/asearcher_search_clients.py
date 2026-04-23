@@ -127,11 +127,9 @@ def format_search_results(results: list[dict]) -> str:
 
     lines = []
     for idx, doc in enumerate(results, start=1):
-        title = doc.get("title", "No title")
-        text = doc.get("text", "")
         url = doc.get("url", "")
-        url_line = f"\nURL: {url}" if url else ""
-        lines.append(f"[{idx}] Title: {title}{url_line}\n{text}")
+        content = doc.get("contents", "")
+        lines.append(f"[{idx}] URL: {url}\nContent: {content}")
     return "\n\n".join(lines)
 
 
