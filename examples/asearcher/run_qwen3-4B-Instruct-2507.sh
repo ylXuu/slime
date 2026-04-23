@@ -74,6 +74,7 @@ ROLLOUT_ARGS=(
    --label-key label
    # TODO: Do NOT use --apply-chat-template; we construct the chat format inside generate().
    --rollout-shuffle
+   --log-multi-turn
    --num-rollout 1000
    --rollout-batch-size 32
    --n-samples-per-prompt 8
