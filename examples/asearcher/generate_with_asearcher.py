@@ -75,6 +75,11 @@ def parse_tool_call(text: str) -> tuple[str, dict] | None:
         data = json.loads(match.group(1).strip())
         name = data.get("name")
         arguments = data.get("arguments", {})
+        if isinstance(arguments, str):
+            try:
+                arguments = json.loads(arguments)
+            except Exception:
+                arguments = {}
         if not name:
             return None
         return name, arguments
