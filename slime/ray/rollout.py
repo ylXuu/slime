@@ -719,9 +719,13 @@ class RolloutManager:
             loss_masks.append(sample.loss_mask)
         train_data["loss_masks"] = loss_masks
 
-        # overwriting the raw reward
-        if samples[0].metadata and "raw_reward" in samples[0].metadata:
-            train_data["raw_reward"] = [sample.metadata["raw_reward"] for sample in samples]
+        # Overwrite raw_reward when available. Mixed-source batches may only
+        # populate this field for a subset of samples (e.g. SWE but not code).
+        if any(sample.metadata and "raw_reward" in sample.metadata for sample in samples):
+            train_data["raw_reward"] = [
+                sample.metadata["raw_reward"] if sample.metadata and "raw_reward" in sample.metadata else sample.reward
+                for sample in samples
+            ]
 
         # For rollout buffer
         if samples[0].metadata and "round_number" in samples[0].metadata:
@@ -963,11 +967,7 @@ def _compute_rollout_offset(args) -> int:
     """Offset (in PG bundle slots) where rollout GPUs start."""
     if args.debug_train_only or args.debug_rollout_only or args.colocate:
         return 0
-    if args.critic_train_only:
-        return args.critic_num_nodes * args.critic_num_gpus_per_node
     offset = args.actor_num_nodes * args.actor_num_gpus_per_node
-    if args.use_critic:
-        offset += args.critic_num_nodes * args.critic_num_gpus_per_node
     return offset
 
 
@@ -975,11 +975,7 @@ def _compute_megatron_num_gpus(args) -> int:
     """Total number of megatron (actor + critic) GPU slots in the placement group."""
     if args.debug_rollout_only:
         return 0
-    if args.critic_train_only:
-        return args.critic_num_nodes * args.critic_num_gpus_per_node
     num = args.actor_num_nodes * args.actor_num_gpus_per_node
-    if args.use_critic:
-        num += args.critic_num_nodes * args.critic_num_gpus_per_node
     return num
 
 
@@ -1076,13 +1072,15 @@ def start_rollout_servers(args, pg) -> dict[str, RolloutServer]:
 
             logger.info(f"EPD phase 1 done: collected {len(encoder_urls)} encoder URLs: {encoder_urls}")
 
-            # --- Phase 2: start non-encoder groups, injecting encoder URLs into prefill ---
+            # --- Phase 2: start non-encoder groups, injecting encoder URLs into
+            # language-only LLM workers. Prefill groups use this for full EPD,
+            # while regular groups allow encoder/LLM split without PD.
             non_encoder_handles: list = []
             for group_cfg in model_cfg.server_groups:
                 if group_cfg.worker_type == "encoder":
                     continue
                 overrides_extra = {}
-                if encoder_urls and group_cfg.worker_type == "prefill":
+                if encoder_urls and group_cfg.worker_type in ("prefill", "regular"):
                     overrides_extra["language_only"] = True
                     overrides_extra["encoder_urls"] = encoder_urls
                 group = _make_group(group_cfg, router_ip, router_port, overrides_extra=overrides_extra)
